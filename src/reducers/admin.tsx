@@ -210,7 +210,7 @@ function mapKVArraysToVariants(kvArrays: KV[][]): VariantsType[] {
   return kvArrays.map((kvArray, i) => {
     return kvArray.reduce((left, right) => {
       const temp = {
-        name: `${left.name}.${right.value}`,
+        name: left.name === "" ? right.value : `${left.name}.${right.value}`,
         price: 0,
         sku: "",
         barcode: "",
