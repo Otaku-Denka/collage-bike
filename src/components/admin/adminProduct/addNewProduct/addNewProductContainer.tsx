@@ -36,6 +36,7 @@ import VarianOptionItem from './varianOptionItem';
 import VariantItemContainer from './variantItemList';
 import * as _ from 'underscore';
 import styled from 'styled-components';
+import { VariantsType } from '../../../../reducers/admin'
 
 class AddNewProductContainer extends React.Component<any, any> {
     constructor() {
@@ -111,7 +112,7 @@ class AddNewProductContainer extends React.Component<any, any> {
                                             .barcode
                                     };
                                     this.props.addVariantValue(
-                                        i,
+                                        option.key,
                                         value,
                                         initValue
                                     );
@@ -661,6 +662,11 @@ const mapDispatchToProps = (dispatch: any, ownProps: any) => {
 };
 
 const mapStateToProps = (state: any, ownProps: any) => {
+  // TODO: Workaround here, should be refactor by reselect
+  state.admin.variants = state.admin.variants.map((variant: VariantsType) => {
+    variant.price = state.form.EditProduct.values.price
+    return variant
+  })
     return {
         admin: state.admin,
         EditProduct: state.form.EditProduct
