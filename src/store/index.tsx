@@ -5,6 +5,7 @@ import { createStore, applyMiddleware, combineReducers } from 'redux';
 import thunk from 'redux-thunk';
 import * as promise from 'redux-promise';
 import { reducer as formReducer } from 'redux-form';
+import * as ACTIONS from '../actions/constants';
 
 import admin from '../reducers/admin';
 
@@ -18,7 +19,27 @@ const logger = createLogger({
 export const rootReducer = combineReducers({
     admin,
     router: routerReducer,
-    form: formReducer
+    form: formReducer.plugin({
+        EditProduct: (state = { values: {} }, action) => {
+            switch (action.type) {
+                case ACTIONS.RESET_VARIANT_VALUE:
+                    if (state.values) {
+                        return {
+                            ...state,
+                            values: {
+                                ...state.values,
+                                variantValue0: '',
+                                variantValue1: '',
+                                variantValue2: ''
+                            }
+                        };
+                    }
+                    return { ...state };
+                default:
+                    return { ...state };
+            }
+        }
+    })
 });
 
 const createStoreWithMiddleware = applyMiddleware(

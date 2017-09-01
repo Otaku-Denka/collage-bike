@@ -10,6 +10,9 @@
     display: block;
     background: var(--admin-bgColor)
     padding-top: 5.6rem
+    @media ( max-width: 767px){
+        padding-left:0px
+    }
 
 
 .admin-products-wrapper
@@ -32,16 +35,38 @@
     margin: 0;
     clearfix()
     background-color: white;
+    .admin-image-item-cover
+        width: 100%;
+        position: absolute
+        bottom:5px
+        left 0
+        display: flex
+        justify-content: center
+        background: white
+        display:none
+        i
+            margin:0 10px
+            opacity: 0.5
+            cursor: pointer
+            &:hover
+                opacity 1
+
+            
     .admin-image-item 
         width: calc(25% - 20px);
         height: 0;
         padding-bottom: calc(25% - 20px);
+        &:hover
+            .admin-image-item-cover
+                display: flex
         &:nth-child(1) 
-            width: calc(50% - 30px);
+            width: calc(50% - 20px);
             height: 0;
             padding-bottom: calc(50% - 10px);
             position: relative;
             clearfix()
+
+
 
 .admin-image-item 
     display: block;

@@ -9,25 +9,43 @@ import {
     FormGroup,
     ControlLabel,
     FormControl,
-    Checkbox
+    Checkbox,
+    Button
 } from 'react-bootstrap';
 
-import Textarea from 'react-textarea-autosize';
+import * as Dropzone from 'react-dropzone';
+import {
+    setPreviewImg,
+    toggleVarianForm,
+    addVariantKey,
+    addVariantValue,
+    removeVariantValue,
+    removePreivewImg,
+    setFirstPreviewImg,
+    initialVariantValue,
+    setVariantPrice,
+    setVariantSku
+} from '../../../../actions/admin';
 
-import { setPreviewImg, toggleVarianForm } from '../../../../actions/admin';
+import { resetVariantValue } from '../../../../actions/form';
 import ImagesWrapper from './imagesWrapper';
 import CustomInput from '../../../customInput/customInput';
 import CustomTextarea from '../../../customInput/customTextarea';
 import CustomSelect from '../../../customInput/customSelect';
 import VarianOptionItem from './varianOptionItem';
+import VariantItemContainer from './variantItemList';
+import * as _ from 'underscore';
+import styled from 'styled-components';
 
 class AddNewProductContainer extends React.Component<any, any> {
     constructor() {
         super();
         this.state = {
-            images: []
+            images: [],
+            defaultVariantKey: ['Material', 'Color', 'Size']
         };
     }
+
     setPreviewImg(e: any) {
         e.preventDefault();
         let files = e.target.files;
@@ -49,10 +67,60 @@ class AddNewProductContainer extends React.Component<any, any> {
             });
         }
     }
+    handleOnDrop(file: any[]) {
+        file.forEach(data => {
+            this.props.setPreviewImg({
+                file: data,
+                result: data.preview
+            });
+        });
+    }
     render() {
+        let dropzoneRef: any;
         const renderImg = this.props.admin.previewImg.map(
             (data: any, i: number) => {
                 return <img src={data.result} key={i} alt="" />;
+            }
+        );
+        const renderVariantOptions = this.props.admin.options.map(
+            (option: any, i: number) => {
+                return (
+                    <VarianOptionItem
+                        removeVariantValue={this.props.removeVariantValue}
+                        key={i}
+                        option={option}
+                        index={i}
+                        onKeyDown={(e: any) => {
+                            if (e.keyCode === 13) {
+                                e.preventDefault();
+                                const value = this.props.EditProduct.values[
+                                    `variantValue${i}`
+                                ];
+                                if (
+                                    value.match(/\S+/g) &&
+                                    _.indexOf(
+                                        this.props.admin.options[i].value,
+                                        value
+                                    ) === -1
+                                ) {
+                                    const initValue = {
+                                        price: this.props.EditProduct.values
+                                            .price,
+                                        sku: this.props.EditProduct.values.sku,
+                                        barcode: this.props.EditProduct.values
+                                            .barcode
+                                    };
+                                    this.props.addVariantValue(
+                                        i,
+                                        value,
+                                        initValue
+                                    );
+                                    this.props.resetVariantValue();
+                                }
+                            }
+                        }}
+                    />
+                );
             }
         );
         return (
@@ -84,6 +152,7 @@ class AddNewProductContainer extends React.Component<any, any> {
                                                 type="text"
                                                 component={CustomInput}
                                                 placeholder={'Enter Title'}
+                                                value={'title'}
                                             />
 
                                             <br />
@@ -107,33 +176,64 @@ class AddNewProductContainer extends React.Component<any, any> {
                                     style={{ background: '#fff' }}
                                 >
                                     <div>
-                                        <span
+                                        <span>Images</span>
+                                        <a
+                                            style={{
+                                                float: 'right',
+                                                cursor: 'pointer'
+                                            }}
                                             onClick={() => {
-                                                console.log(this.state);
-                                                console.log(this.props);
+                                                if (dropzoneRef) {
+                                                    dropzoneRef.open();
+                                                }
                                             }}
                                         >
-                                            Images
-                                        </span>
-                                        <span style={{ float: 'right' }}>
-                                            <input
-                                                type="file"
-                                                multiple={true}
-                                                onChange={e => {
-                                                    this.setPreviewImg(e);
-                                                }}
-                                            />
-                                        </span>
+                                            Upload image
+                                        </a>
                                     </div>
                                     <div
                                         style={{
-                                            background: 'grey',
+                                            background: '#d3d3d3',
                                             marginTop: '20px'
                                         }}
                                     >
-                                        <ImagesWrapper
-                                            data={this.props.admin.previewImg}
-                                        />
+                                        <Dropzone
+                                            ref={node => {
+                                                dropzoneRef = node;
+                                            }}
+                                            style={{
+                                                display: 'flex',
+                                                fontSize: '20px',
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                width: '100%',
+                                                minHeight: '250px'
+                                            }}
+                                            onDrop={file => {
+                                                this.handleOnDrop(file);
+                                            }}
+                                            disableClick={true}
+                                        >
+                                            {this.props.admin.previewImg
+                                                .length < 1 ? (
+                                                'Drop files to upload'
+                                            ) : (
+                                                <ImagesWrapper
+                                                    data={
+                                                        this.props.admin
+                                                            .previewImg
+                                                    }
+                                                    removePreivewImg={
+                                                        this.props
+                                                            .removePreivewImg
+                                                    }
+                                                    setFirstPreviewImg={
+                                                        this.props
+                                                            .setFirstPreviewImg
+                                                    }
+                                                />
+                                            )}
+                                        </Dropzone>
                                     </div>
                                 </Well>
                                 <Well
@@ -401,28 +501,51 @@ class AddNewProductContainer extends React.Component<any, any> {
                                 >
                                     <Row>
                                         <Col md={12}>
-                                            <h4
+                                            <div
                                                 style={{
-                                                    display: 'inline',
-                                                    float: 'left'
+                                                    display: 'block',
+                                                    height: '70px',
+                                                    width: '100%'
                                                 }}
                                             >
-                                                <b>Variants</b>
-                                            </h4>
-                                            <a
-                                                style={{
-                                                    float: 'right',
-                                                    marginTop: '10px',
-                                                    cursor: 'pointer'
-                                                }}
-                                                onClick={() => {
-                                                    this.props.toggleVarianForm();
-                                                }}
-                                            >
-                                                {this.props.admin.varianForm
-                                                    ? 'Cancel'
-                                                    : 'Add variant'}
-                                            </a>
+                                                <h4
+                                                    style={{
+                                                        display: 'inline',
+                                                        float: 'left'
+                                                    }}
+                                                >
+                                                    <b>Variants</b>
+                                                </h4>
+                                                <a
+                                                    style={{
+                                                        float: 'right',
+                                                        marginTop: '10px',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                    onClick={() => {
+                                                        this.props.toggleVarianForm();
+                                                        if (
+                                                            this.props.admin
+                                                                .options
+                                                                .length === 0
+                                                        ) {
+                                                            this.props.addVariantKey(
+                                                                this.props
+                                                                    .EditProduct
+                                                                    .values
+                                                                    .variantName0
+                                                            );
+                                                        }
+                                                    }}
+                                                >
+                                                    {this.props.admin
+                                                        .variantForm ? (
+                                                        'Cancel'
+                                                    ) : (
+                                                        'Add variant'
+                                                    )}
+                                                </a>
+                                            </div>
                                         </Col>
                                         <Col md={12}>
                                             <p style={{ marginTop: '10px' }}>
@@ -432,34 +555,87 @@ class AddNewProductContainer extends React.Component<any, any> {
                                             </p>
                                         </Col>
                                     </Row>
-                                    {this.props.admin.varianForm
-                                        ? <div>
-                                              <Row>
-                                                  <Col md={3}>
-                                                      <span>Option name</span>
-                                                  </Col>
-                                                  <Col md={9}>
-                                                      <span>Option values</span>
-                                                  </Col>
-                                              </Row>
-
-                                              <VarianOptionItem
-                                                  index={1}
-                                                  onKeyDown={(e: any) => {
-                                                      if (e.keyCode === 13) {
-                                                          e.preventDefault();
-                                                          console.log('hihi');
-                                                      }
-                                                  }}
-                                              />
-                                          </div>
-                                        : ''}
+                                    {this.props.admin.variantForm ? (
+                                        <div>
+                                            <Row>
+                                                <Col md={3} sm={3} xs={3}>
+                                                    <span>Option name</span>
+                                                </Col>
+                                                <Col md={9} sm={9} xs={9}>
+                                                    <span>Option values</span>
+                                                </Col>
+                                            </Row>
+                                            {renderVariantOptions}
+                                            <Button
+                                                style={{ marginTop: '20px' }}
+                                                onClick={() => {
+                                                    if (
+                                                        this.props.admin.options
+                                                            .length < 3
+                                                    ) {
+                                                        this.props.addVariantKey(
+                                                            this.props
+                                                                .EditProduct
+                                                                .values[
+                                                                `variantName${this
+                                                                    .props.admin
+                                                                    .options
+                                                                    .length}`
+                                                            ]
+                                                        );
+                                                    }
+                                                }}
+                                            >
+                                                Add another option
+                                            </Button>
+                                            <Row>
+                                                <Col
+                                                    xs={12}
+                                                    style={{
+                                                        marginTop: '20px'
+                                                    }}
+                                                >
+                                                    <p>
+                                                        Modify the variants to
+                                                        be created:
+                                                    </p>
+                                                </Col>
+                                            </Row>
+                                            <Col>
+                                                <VariantItemContainer
+                                                    admin={this.props.admin}
+                                                    reset={this.props.reset}
+                                                    EditProduct={
+                                                        this.props.EditProduct
+                                                    }
+                                                    initialVariantValue={
+                                                        this.props
+                                                            .initialVariantValue
+                                                    }
+                                                    setVariantPrice={
+                                                        this.props
+                                                            .setVariantPrice
+                                                    }
+                                                    setVariantSku={
+                                                        this.props.setVariantSku
+                                                    }
+                                                />
+                                            </Col>
+                                        </div>
+                                    ) : (
+                                        ''
+                                    )}
                                 </Well>
                             </div>
                         </Col>
-                        <Col md={4} style={{ background: 'red' }}>
-                            <span>＜</span>
-                            <span>products</span>
+                        <Col md={4} style={{ marginTop: '20px' }}>
+                            <Well bsSize="large" style={{ background: '#fff' }}>
+                                <TagHeader>
+                                    <b>Tags</b>
+
+                                    <a href="">View all tags</a>
+                                </TagHeader>
+                            </Well>
                         </Col>
                     </Row>
                 </div>
@@ -471,20 +647,45 @@ class AddNewProductContainer extends React.Component<any, any> {
 const mapDispatchToProps = (dispatch: any, ownProps: any) => {
     return {
         setPreviewImg: bindActionCreators(setPreviewImg, dispatch),
-        toggleVarianForm: bindActionCreators(toggleVarianForm, dispatch)
+        toggleVarianForm: bindActionCreators(toggleVarianForm, dispatch),
+        addVariantKey: bindActionCreators(addVariantKey, dispatch),
+        addVariantValue: bindActionCreators(addVariantValue, dispatch),
+        resetVariantValue: bindActionCreators(resetVariantValue, dispatch),
+        removeVariantValue: bindActionCreators(removeVariantValue, dispatch),
+        removePreivewImg: bindActionCreators(removePreivewImg, dispatch),
+        setFirstPreviewImg: bindActionCreators(setFirstPreviewImg, dispatch),
+        initialVariantValue: bindActionCreators(initialVariantValue, dispatch),
+        setVariantPrice: bindActionCreators(setVariantPrice, dispatch),
+        setVariantSku: bindActionCreators(setVariantSku, dispatch)
     };
 };
 
 const mapStateToProps = (state: any, ownProps: any) => {
     return {
-        admin: state.admin
+        admin: state.admin,
+        EditProduct: state.form.EditProduct
     };
 };
 
 let AddNewProductContainerForm = reduxForm({
-    form: 'EditProduct'
+    form: 'EditProduct',
+    initialValues: {
+        variantName0: 'Material',
+        variantName1: 'Color',
+        variantName2: 'Size',
+        variantValue0: '',
+        variantValue1: '',
+        variantValue2: ''
+    }
 })(AddNewProductContainer);
 
 export default connect(mapStateToProps, mapDispatchToProps)(
     AddNewProductContainerForm
 );
+
+const TagHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+`;
+
+const InlineFlex = styled.span`display: flex;`;

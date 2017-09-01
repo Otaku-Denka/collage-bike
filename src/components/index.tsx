@@ -3,9 +3,7 @@ import { Provider } from 'react-redux';
 import * as ReactDOM from 'react-dom';
 import * as injectTapEventPlugin from 'react-tap-event-plugin';
 import { Route, Switch } from 'react-router';
-// import { Switch } from 'react-router-dom';
 import { ConnectedRouter } from 'react-router-redux';
-// import App from './app/app';
 import createBrowserHistory from 'history/createBrowserHistory';
 import storeConfig from '../store/index';
 import AdminApp from './admin/layout';
@@ -19,19 +17,6 @@ let initialStore = {
     router: {}
 };
 
-const routes = {
-    path: '/admin',
-    component: AdminApp,
-    childRoutes: [
-        {
-            path: '/products',
-            component: AdminProductContainer,
-            childRoutes: [
-                { path: '/post/new', component: AddNewProductContainer }
-            ]
-        }
-    ]
-};
 let store = storeConfig(initialStore);
 const history = createBrowserHistory();
 ReactDOM.render(

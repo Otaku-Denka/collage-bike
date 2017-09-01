@@ -9,7 +9,8 @@ const CustomInput = ({
     min,
     max,
     style,
-    onKeyDown
+    onKeyDown,
+    defaultValue
 }: any) => {
     return (
         <FormControl

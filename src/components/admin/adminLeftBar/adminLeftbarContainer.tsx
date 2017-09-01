@@ -12,6 +12,10 @@ const AdminLeftbar = styled.aside`
     bottom: 0;
     background-color: #f4f6f8;
     box-sizing: border-box;
+    translate: all 1s ease-in;
+    @media (max-width: 767px) {
+        left: -24rem;
+    }
 `;
 
 const LeftbarLinkList = styled.ul`
