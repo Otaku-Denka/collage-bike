@@ -34,12 +34,11 @@ export function toggleVarianForm() {
     };
 }
 
-export function addVariantValue(index: number, value: string, initVal: any) {
+export function addVariantValue(key: string, value: string) {
     return {
         type: ACTIONS.ADD_VARIANT_VALUE,
-        index,
+        key,
         value,
-        initVal
     };
 }
 

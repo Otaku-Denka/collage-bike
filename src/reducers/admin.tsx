@@ -6,16 +6,22 @@ function increment_last(v: any, i: any) {
         return parseInt(match, 10) + i;
     });
 }
+
+interface KV {
+  key: string
+  value: string
+}
+
 interface ImgType {
     file?: any;
     result?: string;
 }
 interface OptionType {
     key: string;
-    value?: string[];
+    value: string[];
 }
 
-interface VariantsType {
+export interface VariantsType {
     name: string;
     price: number;
     sku: string;
@@ -25,7 +31,7 @@ interface VariantsType {
 
 interface StateType {
     previewImg?: ImgType[];
-    options?: OptionType[];
+    options: OptionType[];
     variantForm: boolean;
     variants?: VariantsType[];
 }
@@ -119,102 +125,11 @@ export default (state = initialState, action: ActionType): StateType => {
             }
             return { ...state };
         case ACTIONS.ADD_VARIANT_VALUE:
-            if (state.options) {
-                let variants: string[] = [];
-                let variantArr: any = state.options.map((option, i) => {
-                    if (i === action.index) {
-                        if (option.value) {
-                            option.value.push(action.value);
-                            return option;
-                        }
-                    }
-                    return option;
-                });
-
-                let variantValues = variantArr.filter((v: any) => {
-                    if (v.value && v.value.length > 0) {
-                        return v.value;
-                    }
-                    return false;
-                });
-                variantValues = variantValues.map((v: any) => {
-                    return v.value;
-                });
-                let oldResult: any = [];
-                let newResult: any = [];
-                if (variantValues && variantValues[0]) {
-                    for (let i = 0, l = variantValues[0].length; i < l; i++) {
-                        if (
-                            variantValues[0] &&
-                            !variantValues[1] &&
-                            !variantValues[2]
-                        ) {
-                            variants.push(variantValues[0][i]);
-                        }
-                        if (
-                            variantValues[0] &&
-                            variantValues[1] &&
-                            !variantValues[2]
-                        ) {
-                            for (
-                                let x = 0, y = variantValues[1].length;
-                                x < y;
-                                x++
-                            ) {
-                                variants.push(
-                                    `${variantValues[0][i]}・${variantValues[1][
-                                        x
-                                    ]}`
-                                );
-                            }
-                        }
-                        if (
-                            variantValues[0] &&
-                            variantValues[1] &&
-                            variantValues[2]
-                        ) {
-                            for (
-                                let x = 0, y = variantValues[1].length;
-                                x < y;
-                                x++
-                            ) {
-                                for (
-                                    let a = 0, b = variantValues[2].length;
-                                    a < b;
-                                    a++
-                                ) {
-                                    variants.push(
-                                        `${variantValues[0][
-                                            i
-                                        ]}・${variantValues[1][
-                                            x
-                                        ]}・${variantValues[2][a]} `
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
-                let newVariants = variants.map((item: any, index: number) => {
-                    return {
-                        name: item,
-                        price: action.initVal.price ? action.initVal.price : 0,
-                        sku: action.initVal.sku
-                            ? increment_last(action.initVal.sku, index)
-                            : '',
-                        barcode: action.initVal.barcode
-                            ? action.initVal.barcode
-                            : '',
-                        index: index
-                    };
-                });
-                return {
-                    ...state,
-                    options: variantArr,
-                    variants: newVariants
-                };
-            }
-            return { ...state };
+          return {
+              ...state,
+              options: addOptions(state.options, action.key, action.value),
+              variants: optionsToVariants(state.options)
+          };
         case ACTIONS.REMOVE_VARIANT_VALUE:
             if (!state.options) {
                 return { ...state };
@@ -254,3 +169,54 @@ export default (state = initialState, action: ActionType): StateType => {
             return { ...state };
     }
 };
+
+function addOptions(options: OptionType[], key: string, value: string): OptionType[] {
+  return options.map(option => {
+    if (option.key === key) {
+      if (option.value) {
+        option.value.push(value)
+      }
+    }
+    return option
+  })
+}
+
+function optionsToVariants(options: OptionType[]): VariantsType[] {
+  const kvArrays = cartesianProductOf(options)
+  return mapKVArraysToVariants(kvArrays)
+}
+
+function cartesianProductOf(options: OptionType[]): KV[][] {
+  let kvArrays: KV[][] = []
+  options.forEach((option, i, array) => {
+    if (i === 0) {
+      option.value.forEach(v => {
+        kvArrays.push([{key: option.key, value: v}])
+      })
+      return
+    }
+    let temp: {key: string, value: string}[][] = []
+    option.value.forEach(v => {
+      kvArrays.forEach(r => {
+        temp.push([...r, {key: option.key, value: v}])
+      })
+    })
+    kvArrays = temp
+  })
+  return kvArrays
+}
+
+function mapKVArraysToVariants(kvArrays: KV[][]): VariantsType[] {
+  return kvArrays.map((kvArray, i) => {
+    return kvArray.reduce((left, right) => {
+      const temp = {
+        name: left.name === "" ? right.value : `${left.name}.${right.value}`,
+        price: 0,
+        sku: "",
+        barcode: "",
+        index: i
+      }
+      return temp
+    }, {name: "", price: 0, sku: "", barcode: "", index: 0})
+  })
+}
