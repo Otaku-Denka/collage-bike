@@ -187,23 +187,23 @@ function optionsToVariants(options: OptionType[]): VariantsType[] {
 }
 
 function cartesianProductOf(options: OptionType[]): KV[][] {
-  let variants: KV[][] = []
+  let kvArrays: KV[][] = []
   options.forEach((option, i, array) => {
     if (i === 0) {
       option.value.forEach(v => {
-        variants.push([{key: option.key, value: v}])
+        kvArrays.push([{key: option.key, value: v}])
       })
       return
     }
     let temp: {key: string, value: string}[][] = []
     option.value.forEach(v => {
-      variants.forEach(r => {
+      kvArrays.forEach(r => {
         temp.push([...r, {key: option.key, value: v}])
       })
     })
-    variants = temp
+    kvArrays = temp
   })
-  return variants
+  return kvArrays
 }
 
 function mapKVArraysToVariants(kvArrays: KV[][]): VariantsType[] {
